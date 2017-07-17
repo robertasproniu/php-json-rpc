@@ -15,7 +15,7 @@ use ReflectionClass;
 use ReflectionFunction;
 use ReflectionMethod;
 
-class RouteHandler
+class CallbackHandler
 {
     private $callbacks = [];
 
@@ -54,7 +54,7 @@ class RouteHandler
      * @param array params
      * @return mixed
      */
-    private function executeCallback(Closure $callback, array $params)
+    private function executeCallbackClosure(Closure $callback, array $params)
     {
         $reflection = new ReflectionFunction($callback);
 
@@ -100,10 +100,10 @@ class RouteHandler
     /**
      * Register route
      *
-     * @return RouteHandler
+     * @return CallbackHandler
      */
 
-    public function registerRoute()
+    public function bindTo()
     {
         $args = func_get_args();
 
@@ -132,21 +132,22 @@ class RouteHandler
      * @return mixed
      * @throws JsonRpcInternalErrorException
      */
-    public function executeRoute($route, array $parameters = [])
+
+    public function executeCallback($procedure, array $parameters = [])
     {
-        if (! $this->callbacks[$route])
+        if (! $this->callbacks[$procedure])
         {
             throw new JsonRpcMethodNotFoundException();
         }
 
-        if (is_callable($this->callbacks[$route]))
+        if (is_callable($this->callbacks[$procedure]))
         {
-            return $this->executeCallback($this->callbacks[$route], $parameters);
+            return $this->executeCallbackClosure($this->callbacks[$procedure], $parameters);
         }
 
-        if (is_array($this->callbacks[$route]))
+        if (is_array($this->callbacks[$procedure]))
         {
-            return $this->executeCallbackClassMethod($this->callbacks[$route][0], $this->callbacks[$route][1], $parameters);
+            return $this->executeCallbackClassMethod($this->callbacks[$procedure][0], $this->callbacks[$procedure][1], $parameters);
         }
 
         throw new JsonRpcInternalErrorException();

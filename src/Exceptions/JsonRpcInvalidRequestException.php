@@ -7,7 +7,7 @@ namespace JsonRpc\Exceptions;
 
 use RuntimeException;
 
-class JsonRpcInvalidRequestException extends RuntimeException
+class JsonRpcInvalidRequestException extends RuntimeException implements CriticalExceptionInterface
 {
     public function __construct()
     {

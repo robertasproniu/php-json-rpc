@@ -6,34 +6,76 @@
 namespace JsonRpc;
 
 
-use JsonRpc\Exceptions\JsonRpcInvalidParamsException;
-use JsonRpc\Exceptions\JsonRpcInvalidRequestException;
+use JsonRpc\Validators\JsonRpcJsonFormatValidator;
+use JsonRpc\Validators\JsonRpcMethodValidator;
 use JsonRpc\Validators\JsonRpcPayloadValidator;
 
 class RequestHandler
 {
+    private $payload = [];
 
-    public function withPayload($payload)
+    private $routeHandler = null;
+
+    private $responseBuilder;
+
+    public function __construct()
     {
-        $payload = json_decode($payload);
+        $this->parsePayload();
+    }
 
-        $jsonError = json_last_error();
+    public function withPayload($payload = null)
+    {
+        $this->payload = $payload;
 
-        if ($jsonError || !JsonRpcPayloadValidator::validate($payload))
+        return $this;
+    }
+
+    public function withRouteHandler(CallbackHandler $routeHandler)
+    {
+        $this->routeHandler = $routeHandler;
+
+        return $this;
+    }
+
+    public function withResponseBuilder(ResponseBuilder $responseBuilder)
+    {
+        $this->responseBuilder = $responseBuilder;
+    }
+
+    public function processRequest()
+    {
+        $this->validatePayload();
+
+        return $this->payload;
+    }
+
+    private function parsePayload()
+    {
+        $this->payload = $this->payload ? $this->payload : file_get_contents("php://input");
+
+        $this->payload = json_decode($this->payload, true);
+    }
+
+    private function validatePayload()
+    {
+        JsonRpcJsonFormatValidator::validate($this->payload);
+
+        JsonRpcPayloadValidator::validate($this->payload);
+
+        JsonRpcPayloadValidator::validate($this->payload);
+
+        JsonRpcMethodValidator::validate($this->payload);
+    }
+
+    private function executeRoutes()
+    {
+        $results = [];
+
+        if (count($this->payload) != count($this->payload, COUNT_RECURSIVE))
         {
-            throw new JsonRpcInvalidRequestException("Invalid JSON-RPC payload");
+
         }
 
-        $this->payload = $payload;
-    }
-
-    public function withRouteHandler($routeResolver)
-    {
-
-    }
-
-    public function parse()
-    {
-
+        return $results;
     }
 }

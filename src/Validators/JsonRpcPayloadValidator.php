@@ -5,23 +5,23 @@
 
 namespace JsonRpc\Validators;
 
-
 use JsonRpc\Exceptions\JsonRpcInvalidRequestException;
+use JsonRpc\Exceptions\JsonRpcParseErrorException;
 use JsonRpc\Server;
 
 class JsonRpcPayloadValidator implements ValidatorInterface
 {
-
     public static function validate($payload)
     {
-        if (!is_array($payload) ||
-            !in_array('id', $payload) ||
-            !in_array('method', $payload) ||
-            !in_array('jsonrpc', $payload) ||
-            $payload['jsonrpc'] != Server::VERSION ||
-            !in_array('params', $payload)
+        $payload = array_values($payload);
+
+        if (!in_array('method', $payload)
+            || ! is_string($payload['method'])
+            || !in_array('jsonrpc', $payload)
+            || $payload['jsonrpc'] != Server::RPC_VERSION
+            || ( isset($payload['params']) && !is_array($payload['params']) )
         ) {
-            throw new JsonRpcInvalidRequestException("Invalid RPC payload ");
+            throw new JsonRpcParseErrorException();
         }
     }
 }

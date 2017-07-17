@@ -10,13 +10,13 @@ use Exception;
 
 class Server
 {
-    const VERSION = '2.0';
+    const RPC_VERSION = '2.0';
     /**
      * @var RequestHandler
      */
     private $requestHandler;
     /**
-     * @var RouteHandler
+     * @var CallbackHandler
      */
     private $handler;
     /**
@@ -24,32 +24,32 @@ class Server
      */
     private $responseHandler;
     /**
-     * @var RouteHandler
+     * @var CallbackHandler
      */
-    private $routeResolver;
+    private $callbackHandler;
 
     function __construct(
         RequestHandler $requestHandler = null,
-        RouteHandler $routeResolver = null,
+        CallbackHandler $callbackHandler = null,
         ResponseHandler $responseHandler = null
     ) {
         $this->responseHandler = $responseHandler;
         $this->requestHandler = $requestHandler;
-        $this->routeResolver = $routeResolver;
+        $this->callbackHandler = $callbackHandler;
 
         if (! $this->requestHandler)
         {
             $this->requestHandler = new RequestHandler();
         }
 
-        if (! $this->routeResolver)
+        if (! $this->callbackHandler)
         {
-            $this->routeResolver = new RouteHandler();
+            $this->callbackHandler = new CallbackHandler();
         }
 
         if (! $this->responseHandler)
         {
-            $this->responseHandler = new ResponseHandler();
+            $this->responseHandler = new ResponseHandler($this->requestHandler, $callbackHandler);
         }
     }
 
@@ -61,13 +61,12 @@ class Server
      * @param string $method
      * @return $this
      */
-    public function registerRoute($route, $callback, $method)
+    public function withCallback($route, $callback, $method)
     {
-        $this->routeResolver->registerRoute($route, $callback, $method);
+        $this->callbackHandler->bindTo($route, $callback, $method);
 
         return $this;
     }
-
 
     /**
      * Run server
@@ -76,30 +75,7 @@ class Server
      */
     public function execute($payload = null)
     {
-        try
-        {
-            $response = $this->parseRequest();
-        }
-        catch (Exception $e)
-        {
-            $response = $this->handleExceptions($e);
-        }
-
-        $this->responseHandler->sendHeaders();
-
-        return $response;
+        return $this->responseHandler->respond($this->requestHandler, $this->callbackHandler);
     }
 
-    private function parseRequest()
-    {
-        $results = $this->requestHandler
-        ->withRouteHandler($this->routeResolver);
-
-        return $this->responseHandler->success($results);
-    }
-
-    private function handleExceptions($e)
-    {
-
-    }
 }
