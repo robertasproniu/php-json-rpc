@@ -1,0 +1,23 @@
+{
+  "name": "robertasproniu/php-json-rpc",
+  "authors": [
+    {
+      "name": "Robert Asproniu",
+      "email": "robert.asproniu.work@gmail.com"
+    }
+  ],
+
+  "license": "MIT",
+
+  "minimum-stability": "stable",
+
+  "require": {
+    "php" : ">=5.6"
+  },
+
+  "autoload": {
+    "psr-4" : {
+      "JsonRpc\\" : "src/"
+    }
+  }
+}
