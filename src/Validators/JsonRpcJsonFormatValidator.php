@@ -1,13 +1,11 @@
 <?php
-/**
- * Created by: robert.asproniu
- */
 
 namespace JsonRpc\Validators;
 
 
 use Exception;
-use JsonRpc\Contracts\JsonRpcInvalidRequestException;
+use JsonRpc\Contracts\ValidatorInterface;
+use JsonRpc\Exceptions\JsonRpcInvalidRequestException;
 
 class JsonRpcJsonFormatValidator implements ValidatorInterface
 {

@@ -1,10 +1,7 @@
 <?php
-/**
- * Created by: robert.asproniu
- */
+
 
 namespace JsonRpc;
-
 
 use JsonRpc\Validators\JsonRpcJsonFormatValidator;
 use JsonRpc\Validators\JsonRpcPayloadIdValidator;

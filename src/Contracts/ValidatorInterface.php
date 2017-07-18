@@ -1,9 +1,6 @@
 <?php
-/**
- * Created by: robert.asproniu
- */
 
-namespace JsonRpc\Validators;
+namespace JsonRpc\Contracts;
 
 use Exception;
 

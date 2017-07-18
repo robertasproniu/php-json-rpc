@@ -1,7 +1,4 @@
 <?php
-/**
- * Created by: robert.asproniu
- */
 
 namespace JsonRpc;
 
@@ -80,7 +77,7 @@ class Server
     /**
      * Run server
      *
-     * @param string|null $payload
+     * @param string $payload
      *
      * @return mixed
      */
@@ -90,7 +87,7 @@ class Server
 
         $response = $this->callbackHandler->handle($this->requestHandler, $this->responseHandler);
 
-
+        return json_encode($response);
     }
 
 }

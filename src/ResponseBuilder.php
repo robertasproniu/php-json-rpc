@@ -1,7 +1,4 @@
 <?php
-/**
- * Created by: robert.asproniu
- */
 
 namespace JsonRpc;
 
@@ -19,6 +16,12 @@ class ResponseBuilder
 
     private $error = null;
 
+    /**
+     * Set id
+     *
+     * @param null $id
+     * @return $this
+     */
     public function withId($id = null)
     {
         $this->id = $id;
@@ -26,6 +29,12 @@ class ResponseBuilder
         return $this;
     }
 
+    /**
+     * Set result
+     *
+     * @param $result
+     * @return $this
+     */
     public function withResult($result)
     {
         $this->result = $result;
@@ -33,6 +42,13 @@ class ResponseBuilder
         return $this;
     }
 
+    /**
+     * Set error
+     *
+     * @param Exception $exception
+     * @param null $data
+     * @return $this
+     */
     public function withError(Exception $exception, $data = null)
     {
         $this->error = [
@@ -48,6 +64,11 @@ class ResponseBuilder
         return $this;
     }
 
+    /**
+     * Build response
+     *
+     * @return array
+     */
     public function build()
     {
         $response = $this->rpc;

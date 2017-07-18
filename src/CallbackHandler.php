@@ -16,7 +16,6 @@ use JsonRpc\Exceptions\JsonRpcMethodNotFoundException;
 use JsonRpc\Exceptions\JsonRpcServerErrorException;
 use ReflectionClass;
 use ReflectionFunction;
-use ReflectionMethod;
 
 class CallbackHandler
 {
@@ -196,9 +195,13 @@ class CallbackHandler
     }
 
 
+    /**
+     * Handle response
+     *
+     * @return array
+     */
     private function processHandle()
     {
-
         try
         {
             $payload = $this->requestHandler->processRequest();
@@ -213,6 +216,12 @@ class CallbackHandler
         }
     }
 
+    /**
+     * Handle callbacks from payload
+     *
+     * @param array $payload
+     * @return array
+     */
     private function processCallback(array $payload = [])
     {
         if (count($payload) == count($payload, COUNT_RECURSIVE))
@@ -223,6 +232,12 @@ class CallbackHandler
         return $this->processBatchCallback($payload);
     }
 
+    /**
+     * Process multiple callbacks
+     *
+     * @param array $payloads
+     * @return array
+     */
     private function processBatchCallback(array $payloads)
     {
         $response = [];
@@ -235,6 +250,12 @@ class CallbackHandler
         return $response;
     }
 
+    /**
+     * Process single callback
+     *
+     * @param array $payload
+     * @return array
+     */
     private function processSingleCallback(array $payload)
     {
         try
@@ -250,6 +271,9 @@ class CallbackHandler
         }
     }
 
+    /**
+     * Execute middlewares
+     */
     private function processMiddleware()
     {
         foreach ($this->middlewares as $middleware)

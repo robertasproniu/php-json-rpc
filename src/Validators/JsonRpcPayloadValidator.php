@@ -1,11 +1,9 @@
 <?php
-/**
- * Created by: robert.asproniu
- */
 
 namespace JsonRpc\Validators;
 
-use JsonRpc\Contracts\JsonRpcParseErrorException;
+use JsonRpc\Contracts\ValidatorInterface;
+use JsonRpc\Exceptions\JsonRpcParseErrorException;
 use JsonRpc\Server;
 
 class JsonRpcPayloadValidator implements ValidatorInterface
