@@ -73,16 +73,13 @@ class ResponseBuilder
     {
         $response = $this->rpc;
 
+        $response['result'] = $this->result;
+
         if ($this->error)
         {
             $response['error'] = $this->error;
 
             unset ($response['result']);
-        }
-
-        if ($this->result)
-        {
-            $response['result'] = $this->result;
         }
 
         if ($this->id)
