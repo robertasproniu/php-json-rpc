@@ -56,7 +56,10 @@ class RequestHandler
             $this->payload = file_get_contents("php://input");
         }
 
-        $this->payload = json_decode($this->payload, true);
+        if (! is_array($this->payload))
+        {
+            $this->payload = json_decode($this->payload, true);
+        }
     }
 
     /**

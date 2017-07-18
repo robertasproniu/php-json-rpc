@@ -30,16 +30,27 @@ class ResponseHandler
 
     private function sendHeaders()
     {
-        foreach ($this->headers as $header => $value) {
-            header(sprintf("%s: %s"), $header, $value);
+        foreach ($this->headers as $header => $value)
+        {
+            header(sprintf("%s: %s", $header, $value));
         }
+    }
 
-        return $this;
+    private function sendStatus()
+    {
+        http_response_code(204);
     }
 
     public function processResponseWithSuccess($result, $id = null)
     {
         $responseBuilder = clone $this->responseBuilder;
+
+        $this->sendHeaders();
+
+        if (! $id)
+        {
+            $this->sendStatus();
+        }
 
         return $responseBuilder->withId($id)->withResult($result)->build();
 
@@ -48,6 +59,8 @@ class ResponseHandler
     public function processResponseWithError($exception, $id = null)
     {
         $responseBuilder = clone $this->responseBuilder;
+
+        $this->sendHeaders();
 
         return $responseBuilder->withId($id)->withError($exception)->build();
 
