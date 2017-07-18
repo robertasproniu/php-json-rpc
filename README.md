@@ -23,7 +23,7 @@ $server = new Server();
 ```php
 $server
     ->withCallback('add', function($a, $b) {
-        return $a + b;
+        return $a + $b;
     })
     // OR 
     ->withCallback('substract', 'className', 'methodName');
