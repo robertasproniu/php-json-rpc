@@ -131,7 +131,7 @@ class CallbackHandler
     {
         if ( !class_exists($class) || empty($method))
         {
-            throw new JsonRpcInternalErrorException();
+            throw new JsonRpcMethodNotFoundException();
         }
 
         $instance = (new ReflectionClass($class));
