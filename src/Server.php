@@ -6,7 +6,6 @@
 namespace JsonRpc;
 
 use Closure;
-use Exception;
 
 class Server
 {
@@ -49,33 +48,49 @@ class Server
 
         if (! $this->responseHandler)
         {
-            $this->responseHandler = new ResponseHandler($this->requestHandler, $callbackHandler);
+            $this->responseHandler = new ResponseHandler();
         }
     }
 
     /**
-     * Register a route
+     * Register a procedure name with a callback
      *
-     * @param string $route
+     * @param string $name
      * @param string|Closure $callback
      * @param string $method
      * @return $this
      */
-    public function withCallback($route, $callback, $method)
+    public function withCallback($name, $callback, $method = null)
     {
-        $this->callbackHandler->bindTo($route, $callback, $method);
+        $this->callbackHandler->bindCallback($name, $callback, $method);
 
         return $this;
+    }
+
+    /**
+     * Register a middleware callback
+     *
+     * @param Closure $callback
+     */
+    public function withMiddleware(Closure $callback)
+    {
+        $this->callbackHandler->bindMiddleware($callback);
     }
 
     /**
      * Run server
      *
      * @param string|null $payload
+     *
+     * @return mixed
      */
     public function execute($payload = null)
     {
-        return $this->responseHandler->respond($this->requestHandler, $this->callbackHandler);
+        $this->requestHandler->processPayload($payload);
+
+        $response = $this->callbackHandler->handle($this->requestHandler, $this->responseHandler);
+
+
     }
 
 }

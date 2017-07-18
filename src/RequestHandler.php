@@ -7,75 +7,97 @@ namespace JsonRpc;
 
 
 use JsonRpc\Validators\JsonRpcJsonFormatValidator;
-use JsonRpc\Validators\JsonRpcMethodValidator;
+use JsonRpc\Validators\JsonRpcPayloadIdValidator;
 use JsonRpc\Validators\JsonRpcPayloadValidator;
 
 class RequestHandler
 {
-    private $payload = [];
+    private $payload = null;
 
-    private $routeHandler = null;
-
-    private $responseBuilder;
-
+    /**
+     * RequestHandler constructor.
+     */
     public function __construct()
     {
-        $this->parsePayload();
+        $this->processParsing();
     }
 
-    public function withPayload($payload = null)
+    /**
+     * Set payload to request
+     *
+     * @param string|null $payload
+     * @return $this
+     */
+    public function processPayload($payload = null)
     {
         $this->payload = $payload;
 
-        return $this;
-    }
-
-    public function withRouteHandler(CallbackHandler $routeHandler)
-    {
-        $this->routeHandler = $routeHandler;
+        $this->processParsing();
 
         return $this;
     }
 
-    public function withResponseBuilder(ResponseBuilder $responseBuilder)
-    {
-        $this->responseBuilder = $responseBuilder;
-    }
-
+    /**
+     * Process request payload
+     *
+     * @return null
+     */
     public function processRequest()
     {
-        $this->validatePayload();
+        $this->processValidation($this->payload);
 
         return $this->payload;
     }
 
-    private function parsePayload()
+    /**
+     * parse payload and trasnfor to array
+     */
+    private function processParsing()
     {
-        $this->payload = $this->payload ? $this->payload : file_get_contents("php://input");
+        if (! $this->payload)
+        {
+            $this->payload = file_get_contents("php://input");
+        }
 
         $this->payload = json_decode($this->payload, true);
     }
 
-    private function validatePayload()
+    /**
+     * Process payload validation
+     *
+     * @param $payload
+     */
+    private function processValidation($payload)
     {
-        JsonRpcJsonFormatValidator::validate($this->payload);
 
-        JsonRpcPayloadValidator::validate($this->payload);
-
-        JsonRpcPayloadValidator::validate($this->payload);
-
-        JsonRpcMethodValidator::validate($this->payload);
+        if (count($payload) == count($payload, COUNT_RECURSIVE))
+        {
+            $this->validatePayload($payload);
+        }
+        else
+        {
+            foreach ($payload as $payloadSingle)
+            {
+                $this->validatePayload($payloadSingle, true);
+            }
+        }
     }
 
-    private function executeRoutes()
+    /**
+     * Validate payload
+     *
+     * @param $payload
+     * @param bool $strict
+     */
+    private function validatePayload($payload, $strict = false)
     {
-        $results = [];
+        JsonRpcJsonFormatValidator::validate($payload);
 
-        if (count($this->payload) != count($this->payload, COUNT_RECURSIVE))
+        JsonRpcPayloadValidator::validate($payload);
+
+        if ($strict)
         {
-
+            JsonRpcPayloadIdValidator::validate($payload);
         }
-
-        return $results;
     }
 }

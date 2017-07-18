@@ -7,13 +7,13 @@ namespace JsonRpc\Validators;
 
 use BadMethodCallException;
 
-class JsonRpcMethodValidator implements ValidatorInterface
+class JsonRpcEncodingValidator implements ValidatorInterface
 {
     public static function validate($payload)
     {
-        if ( is_array($payload) && (!in_array('method', $payload) || empty( $payload['method'])) )
+       /* if ( 2q!in_array('method', array_keys()$payload) || empty( $payload['method'])) )
         {
             throw new BadMethodCallException();
-        }
+        }*/
     }
 }

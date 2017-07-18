@@ -3,7 +3,7 @@
  * Created by: robert.asproniu
  */
 
-namespace JsonRpc\Exceptions;
+namespace JsonRpc\Contracts;
 
 
 interface CriticalExceptionInterface

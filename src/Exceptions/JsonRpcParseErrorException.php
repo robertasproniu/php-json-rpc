@@ -6,6 +6,7 @@
 namespace JsonRpc\Exceptions;
 
 
+use JsonRpc\Contracts\CriticalExceptionInterface;
 use RuntimeException;
 
 class JsonRpcParseErrorException extends RuntimeException implements CriticalExceptionInterface

@@ -7,7 +7,7 @@ namespace JsonRpc\Validators;
 
 
 use Exception;
-use JsonRpc\Exceptions\JsonRpcInvalidRequestException;
+use JsonRpc\Contracts\JsonRpcInvalidRequestException;
 
 class JsonRpcJsonFormatValidator implements ValidatorInterface
 {

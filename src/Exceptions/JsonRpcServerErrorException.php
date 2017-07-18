@@ -5,10 +5,10 @@
 
 namespace JsonRpc\Exceptions;
 
+use JsonRpc\Contracts\CriticalExceptionInterface;
 use RuntimeException;
-use Throwable;
 
-class JsonRpcServerErrorException extends RuntimeException
+class JsonRpcServerErrorException extends RuntimeException implements CriticalExceptionInterface
 {
    public function __construct()
    {

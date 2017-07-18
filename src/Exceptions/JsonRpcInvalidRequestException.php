@@ -5,6 +5,7 @@
 
 namespace JsonRpc\Exceptions;
 
+use JsonRpc\Contracts\CriticalExceptionInterface;
 use RuntimeException;
 
 class JsonRpcInvalidRequestException extends RuntimeException implements CriticalExceptionInterface

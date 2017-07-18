@@ -7,8 +7,11 @@ namespace JsonRpc;
 
 
 use Closure;
+use Exception;
+use JsonRpc\Contracts\CriticalExceptionInterface;
 use JsonRpc\Exceptions\JsonRpcInternalErrorException;
 use JsonRpc\Exceptions\JsonRpcInvalidParamsException;
+use JsonRpc\Exceptions\JsonRpcInvalidRequestException;
 use JsonRpc\Exceptions\JsonRpcMethodNotFoundException;
 use JsonRpc\Exceptions\JsonRpcServerErrorException;
 use ReflectionClass;
@@ -18,6 +21,67 @@ use ReflectionMethod;
 class CallbackHandler
 {
     private $callbacks = [];
+
+    private $middlewares = [];
+
+    /**
+     * @var RequestHandler
+     */
+    private $requestHandler;
+
+    /**
+     * @var ResponseHandler
+     */
+    private $responseHandler;
+
+    /**
+     * Register route
+     *
+     * @return CallbackHandler
+     */
+
+    public function bindCallback()
+    {
+        $args = func_get_args();
+
+        if (count($args) < 2)
+        {
+            throw new JsonRpcServerErrorException();
+        }
+
+        if (is_callable($args[1]))
+        {
+            call_user_func_array([$this, 'registerCallback'], $args);
+        }
+        else
+        {
+            call_user_func_array([$this, 'registerCallbackWithClassMethod'], $args);
+        }
+
+        return $this;
+    }
+
+    public function bindMiddleware(Closure $callback)
+    {
+        $this->middlewares[] = $callback;
+    }
+
+    /**
+     * Handle callback based on payload
+     *
+     * @param RequestHandler $requestHandler
+     * @param ResponseHandler $responseHandler
+     * @return array
+     *
+     */
+    public function handle(RequestHandler $requestHandler, ResponseHandler $responseHandler)
+    {
+        $this->requestHandler = $requestHandler;
+
+        $this->responseHandler = $responseHandler;
+
+        return $this->processHandle();
+    }
 
     /**
      * Register route with callback
@@ -39,11 +103,6 @@ class CallbackHandler
      */
     private function registerCallbackWithClassMethod($routeName, $className, $methodName)
     {
-        if ( !class_exists($className) || empty($methodName) || !method_exists($className, $methodName))
-        {
-            throw new JsonRpcInternalErrorException();
-        }
-
         $this->callbacks[(string) $routeName] = [$className, $methodName];
     }
 
@@ -71,13 +130,23 @@ class CallbackHandler
      */
     private function executeCallbackClassMethod($class, $method, array $params)
     {
-        $instance = (new ReflectionClass($class))->newInstance();
+        if ( !class_exists($class) || empty($method))
+        {
+            throw new JsonRpcInternalErrorException();
+        }
 
-        $reflection = new ReflectionMethod($instance, $method);
+        $instance = (new ReflectionClass($class));
+
+        if ( !$instance->hasMethod($method) )
+        {
+            throw new JsonRpcMethodNotFoundException();
+        }
+
+        $reflection = $instance->getMethod($method);
 
         $this->validateRequiredParams($reflection->getNumberOfRequiredParameters(), $params);
 
-        return $reflection->invokeArgs($instance, $params);
+        return $reflection->invokeArgs($instance->newInstance(), $params);
     }
 
 
@@ -98,51 +167,19 @@ class CallbackHandler
 
 
     /**
-     * Register route
-     *
-     * @return CallbackHandler
-     */
-
-    public function bindTo()
-    {
-        $args = func_get_args();
-
-        if (count($args) < 2)
-        {
-            throw new JsonRpcServerErrorException();
-        }
-
-        if (is_callable($args[1]))
-        {
-            call_user_func_array([$this, 'registerCallback'], $args);
-        }
-        else
-        {
-            call_user_func_array([$this, 'registerCallbackWithClassMethod'], $args);
-        }
-
-        return $this;
-    }
-
-    /**
      * Execute route callback and return results
      *
-     * @param $route
+     * @param $procedure
      * @param array $parameters
      * @return mixed
      * @throws JsonRpcInternalErrorException
      */
 
-    public function executeCallback($procedure, array $parameters = [])
+    private function executeCallback($procedure, array $parameters = [])
     {
         if (! $this->callbacks[$procedure])
         {
             throw new JsonRpcMethodNotFoundException();
-        }
-
-        if (is_callable($this->callbacks[$procedure]))
-        {
-            return $this->executeCallbackClosure($this->callbacks[$procedure], $parameters);
         }
 
         if (is_array($this->callbacks[$procedure]))
@@ -150,6 +187,86 @@ class CallbackHandler
             return $this->executeCallbackClassMethod($this->callbacks[$procedure][0], $this->callbacks[$procedure][1], $parameters);
         }
 
+        if (is_callable($this->callbacks[$procedure]))
+        {
+            return $this->executeCallbackClosure($this->callbacks[$procedure], $parameters);
+        }
+
         throw new JsonRpcInternalErrorException();
+    }
+
+
+    private function processHandle()
+    {
+
+        try
+        {
+            $payload = $this->requestHandler->processRequest();
+
+            $this->processMiddleware();
+
+            return $this->processCallback($payload);
+        }
+        catch (CriticalExceptionInterface $exception)
+        {
+            return $this->responseHandler->processResponseWithError($exception, null);
+        }
+    }
+
+    private function processCallback(array $payload = [])
+    {
+        if (count($payload) == count($payload, COUNT_RECURSIVE))
+        {
+            return $this->processSingleCallback($payload);
+        }
+
+        return $this->processBatchCallback($payload);
+    }
+
+    private function processBatchCallback(array $payloads)
+    {
+        $response = [];
+
+        foreach ($payloads as $payload)
+        {
+            $response[] = $this->processSingleCallback($payload);
+        }
+
+        return $response;
+    }
+
+    private function processSingleCallback(array $payload)
+    {
+        try
+        {
+            $result = $this->executeCallback($payload['method'], $payload['params']);
+
+            return $this->responseHandler
+                ->processResponseWithSuccess($result, isset($payload['id']) ? $payload['id'] : null);
+        }
+        catch (Exception $exception)
+        {
+            return $this->responseHandler->processResponseWithError($exception, $payload['id']);
+        }
+    }
+
+    private function processMiddleware()
+    {
+        foreach ($this->middlewares as $middleware)
+        {
+            try
+            {
+                $result = $middleware($this->requestHandler, $this->responseHandler);
+
+                if ($result)
+                {
+                    throw new JsonRpcInvalidRequestException();
+                }
+            }
+            catch (Exception $exception)
+            {
+                throw new JsonRpcServerErrorException();
+            }
+        }
     }
 }

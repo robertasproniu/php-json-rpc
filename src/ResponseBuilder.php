@@ -48,7 +48,7 @@ class ResponseBuilder
         return $this;
     }
 
-    public function returnResponse()
+    public function build()
     {
         $response = $this->rpc;
 
