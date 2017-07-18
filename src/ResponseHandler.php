@@ -26,6 +26,8 @@ class ResponseHandler
         {
             $this->responseBuilder = new ResponseBuilder();
         }
+
+        $this->sendHeaders();
     }
 
     private function sendHeaders()
@@ -45,24 +47,18 @@ class ResponseHandler
     {
         $responseBuilder = clone $this->responseBuilder;
 
-        $this->sendHeaders();
-
         if (! $id)
         {
             $this->sendStatus();
         }
 
         return $responseBuilder->withId($id)->withResult($result)->build();
-
     }
 
     public function processResponseWithError($exception, $id = null)
     {
         $responseBuilder = clone $this->responseBuilder;
 
-        $this->sendHeaders();
-
         return $responseBuilder->withId($id)->withError($exception)->build();
-
     }
 }

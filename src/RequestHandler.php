@@ -69,8 +69,7 @@ class RequestHandler
      */
     private function processValidation($payload)
     {
-
-        if (count($payload) == count($payload, COUNT_RECURSIVE))
+        if (array_keys($payload) != range(0, count($payload) - 1))
         {
             $this->validatePayload($payload);
         }
